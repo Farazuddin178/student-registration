@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Student Registration System for registering, editing, and deleting student details.">
+    <meta name="author" content="Mohammed Faraz Uddin">
+    <title>Student Registration System</title>
+    <style>
+        /* General body styles for readability and spacing */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        /* Header styling */
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+        /* Main content styling for form and table */
+        main {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        /* Form layout and input styles */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="email"], input[type="number"] {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        /* Submit button styling */
+        input[type="submit"] {
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        /* Table layout for displaying students */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        td {
+            background-color: #f9f9f9;
+        }
+        /* Scrollbar for the table when data exceeds certain rows */
+        #student-table-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <!-- Catchy title and description for the system -->
+        <h1>Student Registration System</h1>
+        <p>Register, edit, and manage student details efficiently with our easy-to-use system.</p>
+    </header>
+
+    <main>
+        <!-- Form for registering new students -->
+        <form id="registration-form">
+            <label for="student-name">Student Name:</label>
+            <input type="text" id="student-name" name="student-name" placeholder="Enter full name" required>
+
+            <label for="student-id">Student ID:</label>
+            <input type="text" id="student-id" name="student-id" placeholder="Enter student ID" required>
+
+            <label for="email">Email ID:</label>
+            <input type="email" id="email" name="email" placeholder="Enter email address" required>
+
+            <label for="contact">Contact No:</label>
+            <input type="number" id="contact" name="contact" placeholder="Enter contact number" required>
+
+            <!-- Submit button to register student -->
+            <input type="submit" value="Register">
+        </form>
+
+        <!-- Table section to display registered students -->
+        <section>
+            <h2>Registered Students</h2>
+            <div id="student-table-wrapper">
+                <table id="student-table">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Student ID</th>
+                            <th>Email</th>
+                            <th>Contact No.</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-list">
+                        <!-- Student records will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Student Registration System</p>
+    </footer>
+
+    <!-- JavaScript for functionality -->
+    <script>
+        const form = document.getElementById('registration-form');
+        const studentList = document.getElementById('student-list');
+
+        // Load students from local storage on page load
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+
+        // Display all students on page load
+        document.addEventListener('DOMContentLoaded', displayStudents);
+
+        // Function to display students
+        function displayStudents() {
+            studentList.innerHTML = ''; // Clear current display
+            students.forEach((student, index) => addStudentToTable(student, index));
+        }
+
+        // Add new student on form submission
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();  // Prevent page refresh on form submit
+
+            const name = document.getElementById('student-name').value;
+            const studentId = document.getElementById('student-id').value;
+            const email = document.getElementById('email').value;
+            const contact = document.getElementById('contact').value;
+
+            // Validate input fields
+            if (!validateInput(name, studentId, email, contact)) {
+                return;
+            }
+
+            const newStudent = { name, studentId, email, contact }; // Create student object
+            students.push(newStudent); // Add to students array
+            localStorage.setItem('students', JSON.stringify(students)); // Save to local storage
+
+            addStudentToTable(newStudent, students.length - 1); // Add to table
+            form.reset(); // Clear form fields
+        });
+
+        // Function to validate form input
+        function validateInput(name, studentId, email, contact) {
+            const nameRegex = /^[a-zA-Z\s]+$/;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            // Validate name, ID, email, and contact fields
+            if (!nameRegex.test(name)) {
+                alert('Student name should only contain characters.');
+                return false;
+            }
+            if (isNaN(studentId) || studentId === '') {
+                alert('Student ID should contain only numbers.');
+                return false;
+            }
+            if (!emailRegex.test(email)) {
+                alert('Enter a valid email.');
+                return false;
+            }
+            if (isNaN(contact) || contact === '') {
+                alert('Contact number should contain only numbers.');
+                return false;
+            }
+            return true;
+        }
+
+        // Function to add student to the table
+        function addStudentToTable(student, index) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${student.name}</td>
+                <td>${student.studentId}</td>
+                <td>${student.email}</td>
+                <td>${student.contact}</td>
+                <td><button onclick="editStudent(${index})">Edit</button></td>
+                <td><button onclick="deleteStudent(${index})">Delete</button></td>
+            `;
+            studentList.appendChild(row);
+        }
+
+        // Edit student function
+        function editStudent(index) {
+            const student = students[index];
+
+            // Populate form with student data for editing
+            document.getElementById('student-name').value = student.name;
+            document.getElementById('student-id').value = student.studentId;
+            document.getElementById('email').value = student.email;
+            document.getElementById('contact').value = student.contact;
+
+            deleteStudent(index); // Remove old record to avoid duplicate
+        }
+
+        // Delete student function
+        function deleteStudent(index) {
+            students.splice(index, 1); // Remove from array
+            localStorage.setItem('students', JSON.stringify(students)); // Update local storage
+            displayStudents(); // Refresh the student table
+        }
+    </script>
+</body>
+</html>
